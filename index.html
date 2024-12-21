@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS 180: High Dynamic Range Imaging</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --header-color: #2980b9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+
+        header {
+            background-color: var(--header-color);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        #toc {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: var(--secondary-color);
+            padding: 2rem 1rem;
+            color: white;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #toc h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        #toc ul {
+            list-style-type: none;
+        }
+
+        #toc ul ul {
+            padding-left: 1rem;
+        }
+
+        #toc a {
+            text-decoration: none;
+            color: #ecf0f1;
+            display: block;
+            padding: 0.5rem 0;
+            transition: color 0.3s ease;
+        }
+
+        #toc a:hover {
+            color: var(--primary-color);
+        }
+
+        main {
+            margin-left: 250px;
+            padding: 2rem;
+            max-width: 1200px;
+        }
+
+        section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .image-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+            .image-item {
+                flex-basis: calc(25% - 1rem);
+                background-color: white;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+        .image-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-item p {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            background-color: var(--secondary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+            margin-left: 250px;
+        }
+
+        @media (max-width: 768px) {
+            #toc {
+                transform: translateX(-100%);
+            }
+
+            main, footer {
+                margin-left: 0;
+            }
+
+            .image-item {
+                flex-basis: calc(50% - 1rem);
+            }
+        }
+
+        #toc-toggle {
+            position: fixed;
+            left: 10px;
+            top: 10px;
+            z-index: 1000;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            #toc-toggle {
+                display: block;
+            }
+        }
+
+        .author-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 0.5em;
+            margin-bottom: 0.2em;
+            text-align: center;
+        }
+    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+</head>
+<body>
+    <nav id="toc">
+        <h2>Table of Contents</h2>
+        <ul id="toc-list"></ul>
+    </nav>
+    <header>
+        <h1>CS 180: High Dynamic Range Imaging</h1>
+        <p class="author-name">By Ethan Jagoda</p>
+    </header>
+    <main>
+        <section>
+            <h2>Introduction</h2>
+            <p>Traditional photographs are unable to capture the full range of light intensities in a scene. We can get around this by taking multiple photos with different exposure settings and then combining them. This is called High Dynamic Range (HDR) imaging.</p>
+            <h2>Setup</h2>
+            <p>We start by taking a series of photos with different exposure settings. Here is an example:</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/1_25.jpg" alt="First frame of the video">
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/1_4.jpg" alt="First frame of the video">
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/3_1.jpg" alt="First frame of the video">
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/17_1.jpg" alt="First frame of the video">
+                </div>
+            </div>
+            <h2>Recovering a radiance map</h2>
+            <p>The radiance map describes the amount of light hitting each pixel. We can recover this from the images using a series of steps.</p>
+            <ol>
+                <li>
+                  <strong>Capture multiple exposures:</strong><br>
+                  Take several photographs of the same static scene at different shutter speeds or exposure times. 
+                  Ensure the camera is mounted on a tripod to keep the scene aligned and avoid motion blur.
+                </li>
+                <li>
+                  <strong>Weighting each pixel value:</strong><br>
+                  For each pixel in each exposure, assign a weight based on its intensity. 
+                  A common weighting function peaks at mid-range values (around 128) and decreases to zero at the extremes (0 and 255). 
+                  This emphasizes well-exposed pixels and reduces the impact of under- or over-exposed ones.
+                </li>
+                <li>
+                  <strong>Forming the linear system for the response function:</strong><br>
+                  Represent the camera response function g(Z) in a discrete form for pixel intensities Z=0 to 255.
+                  Set up a system of equations derived from the relationship: g(Z<sub>ij</sub>) = ln(E<sub>i</sub>) + ln(Δt<sub>j</sub>), 
+                  where Z<sub>ij</sub> is the observed pixel intensity at position i in the j-th image, E<sub>i</sub> is the unknown radiance at that pixel, 
+                  and Δt<sub>j</sub> is the known exposure time of the j-th image.
+                </li>
+                <li>
+                  <strong>Incorporate smoothness constraints:</strong><br>
+                  Add a term to the equations that penalizes large second derivatives of g. 
+                  This ensures g is a smooth function and avoids solutions that oscillate or fit noise too closely.
+                </li>
+                <li>
+                  <strong>Solve the system:</strong><br>
+                  Use numerical methods (e.g., least-squares) to solve for g(Z) and the relative log radiances. 
+                  Once solved, you have g mapping pixel values to log exposure, up to a scale factor.
+                </li>
+                <li>
+                  <strong>Compute per-pixel radiance:</strong><br>
+                  For each pixel i, use all exposures to estimate ln(E<sub>i</sub>) by rearranging:
+                  ln(E<sub>i</sub>) = g(Z<sub>ij</sub>) - ln(Δt<sub>j</sub>). 
+                  Since each exposure offers a slightly different measurement, average the results (weighted by the same weighting function) 
+                  to produce a robust estimate of E<sub>i</sub>.
+                </li>
+                <li>
+                  <strong>Generate the HDR radiance map:</strong><br>
+                  After computing ln(E<sub>i</sub>) for each pixel, exponentiate to get E<sub>i</sub>. 
+                  Assemble these radiance values into a floating-point image that represents the scene's full dynamic range.
+                </li>
+              </ol>
+            <!-- TODO: add radiance map examples-->
+             <h2>Results of Radiance Map</h2>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/arch_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - Arch</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/arch_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - Arch</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/arch_g_curves.png" alt="G Curves">
+                <p>G Curves - Arch</p>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/bonsai_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - Bonsai</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/bonsai_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - Bonsai</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/bonsai_g_curves.png" alt="G Curves">
+                <p>G Curves - Bonsai</p>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/chapel_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - Chapel</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/chapel_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - Chapel</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/chapel_g_curves.png" alt="G Curves">
+                <p>G Curves - Chapel</p>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garage_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - Garage</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garage_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - Garage</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/garage_g_curves.png" alt="G Curves">
+                <p>G Curves - Garage</p>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garden_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - Garden</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garden_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - Garden</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/garden_g_curves.png" alt="G Curves">
+                <p>G Curves - Garden</p>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/house_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - House</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/house_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - House</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/house_g_curves.png" alt="G Curves">
+                <p>G Curves - House</p>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/mug_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - Mug</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/mug_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - Mug</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/mug_g_curves.png" alt="G Curves">
+                <p>G Curves - Mug</p>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/window_hdr_radiance_map_mean.png" alt="HDR Radiance Map mean">
+                    <p>HDR Radiance Map mean - Window</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/window_hdr_radiance_map.png" alt="HDR Radiance Map">
+                    <p>HDR Radiance Map - Window</p>
+                </div>
+            </div>
+            <div class="image-item">
+                <img src="project2-hdr-ghgavinzhang/code/results/window_g_curves.png" alt="G Curves">
+                <p>G Curves - Window</p>
+            </div>
+            <h2>Part 2: Tone Mapping</h2>
+            <p>Now that we have a radiance map, we need to convert this to a visual image. To do this, we map the radiance values to a displayable range. We can do this by using a tone mapping operator.</p>
+            <p>There are many different options for tone mapping operateors, we will use a simple linear scale (global simple operator), a log scale (global scale operator), and a local tone operator: the durand tone mapping operator.</p>
+            <h2>Results of Tone Mapping</h2>
+            <!-- TODO: add radiance map examples-->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/arch_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - Arch</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/arch_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - Arch</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/arch_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - Arch</p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/bonsai_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - Bonsai</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/bonsai_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - Bonsai</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/bonsai_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - Bonsai</p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/chapel_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - Chapel</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/chapel_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - Chapel</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/chapel_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - Chapel</p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garage_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - Garage</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garage_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - Garage</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garage_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - Garage</p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garden_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - Garden</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garden_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - Garden</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/garden_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - Garden</p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/house_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - House</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/house_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - House</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/house_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - House</p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/mug_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - Mug</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/mug_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - Mug</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/mug_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - Mug</p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/window_durand.png" alt="HDR Radiance Map mean">
+                    <p>Durand - Window</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/window_global_simple.png" alt="HDR Radiance Map mean">
+                    <p>Global Simple - Window</p>
+                </div>
+                <div class="image-item">
+                    <img src="project2-hdr-ghgavinzhang/code/results/window_global_scale.png" alt="HDR Radiance Map mean">
+                    <p>Global Scale - Window</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>2024 Ethan Jagoda - CS180: High Dynamic Range Imaging</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tocList = document.getElementById('toc-list');
+            const headers = document.querySelectorAll('h2, h3');
+            headers.forEach(function(header, index) {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                if (!header.id) {
+                    header.id = 'toc-' + index;
+                }
+                a.href = '#' + header.id;
+                a.textContent = header.textContent;
+                li.appendChild(a);
+                if (header.tagName === 'H2') {
+                    tocList.appendChild(li);
+                } else if (header.tagName === 'H3') {
+                    let lastH2Li = tocList.lastElementChild;
+                    let ul = lastH2Li.querySelector('ul');
+                    if (!ul) {
+                        ul = document.createElement('ul');
+                        lastH2Li.appendChild(ul);
+                    }
+                    ul.appendChild(li);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
